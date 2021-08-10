@@ -451,6 +451,7 @@ class GaussianDiffusion:
         progress=False,
         skip_timesteps=0,
         init_image=None,
+        randomize_class=False,
     ):
         """
         Generate samples from the model.
@@ -484,6 +485,7 @@ class GaussianDiffusion:
             progress=progress,
             skip_timesteps=skip_timesteps,
             init_image=init_image,
+            randomize_class=randomize_class,
         ):
             final = sample
         return final["sample"]
@@ -501,6 +503,7 @@ class GaussianDiffusion:
         progress=False,
         skip_timesteps=0,
         init_image=None,
+        randomize_class=False,
     ):
         """
         Generate samples from the model and yield intermediate samples from
@@ -536,6 +539,10 @@ class GaussianDiffusion:
 
         for i in indices:
             t = th.tensor([i] * shape[0], device=device)
+            if randomize_class and 'y' in model_kwargs:
+                model_kwargs['y'] = th.randint(low=0, high=model.num_classes,
+                                               size=model_kwargs['y'].shape,
+                                               device=model_kwargs['y'].device)
             with th.no_grad():
                 out = self.p_sample(
                     model,
@@ -649,6 +656,7 @@ class GaussianDiffusion:
         device=None,
         progress=False,
         eta=0.0,
+        randomize_class=False,
     ):
         """
         Generate samples from the model using DDIM.
@@ -667,6 +675,7 @@ class GaussianDiffusion:
             device=device,
             progress=progress,
             eta=eta,
+            randomize_class=randomize_class,
         ):
             final = sample
         return final["sample"]
@@ -683,6 +692,7 @@ class GaussianDiffusion:
         device=None,
         progress=False,
         eta=0.0,
+        randomize_class=False,
     ):
         """
         Use DDIM to sample from the model and yield intermediate samples from
@@ -707,6 +717,10 @@ class GaussianDiffusion:
 
         for i in indices:
             t = th.tensor([i] * shape[0], device=device)
+            if randomize_class and 'y' in model_kwargs:
+                model_kwargs['y'] = th.randint(low=0, high=model.num_classes,
+                                               size=model_kwargs['y'].shape,
+                                               device=model_kwargs['y'].device)
             with th.no_grad():
                 out = self.ddim_sample(
                     model,
