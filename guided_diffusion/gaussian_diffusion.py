@@ -656,6 +656,8 @@ class GaussianDiffusion:
         device=None,
         progress=False,
         eta=0.0,
+        skip_timesteps=0,
+        init_image=None,
         randomize_class=False,
     ):
         """
@@ -675,6 +677,8 @@ class GaussianDiffusion:
             device=device,
             progress=progress,
             eta=eta,
+            skip_timesteps=skip_timesteps,
+            init_image=init_image,
             randomize_class=randomize_class,
         ):
             final = sample
@@ -692,6 +696,8 @@ class GaussianDiffusion:
         device=None,
         progress=False,
         eta=0.0,
+        skip_timesteps=0,
+        init_image=None,
         randomize_class=False,
     ):
         """
