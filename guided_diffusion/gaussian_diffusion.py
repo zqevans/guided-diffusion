@@ -572,7 +572,7 @@ class GaussianDiffusion:
 
         Same usage as p_sample().
         """
-        out = self.p_mean_variance(
+        out_orig = self.p_mean_variance(
             model,
             x,
             t,
@@ -581,7 +581,7 @@ class GaussianDiffusion:
             model_kwargs=model_kwargs,
         )
         if cond_fn is not None:
-            out = self.condition_score(cond_fn, out, x, t, model_kwargs=model_kwargs)
+            out = self.condition_score(cond_fn, out_orig, x, t, model_kwargs=model_kwargs)
 
         # Usually our model outputs epsilon, but we re-derive it
         # in case we used x_start or x_prev prediction.
@@ -604,7 +604,7 @@ class GaussianDiffusion:
             (t != 0).float().view(-1, *([1] * (len(x.shape) - 1)))
         )  # no noise when t == 0
         sample = mean_pred + nonzero_mask * sigma * noise
-        return {"sample": sample, "pred_xstart": out["pred_xstart"]}
+        return {"sample": sample, "pred_xstart": out_orig["pred_xstart"]}
 
     def ddim_reverse_sample(
         self,
@@ -713,7 +713,16 @@ class GaussianDiffusion:
             img = noise
         else:
             img = th.randn(*shape, device=device)
-        indices = list(range(self.num_timesteps))[::-1]
+
+        if skip_timesteps and init_image is None:
+            init_image = th.zeros_like(img)
+
+        indices = list(range(self.num_timesteps - skip_timesteps))[::-1]
+
+        if init_image is not None:
+            fac_1 = self.sqrt_alphas_cumprod[indices[0]]
+            fac_2 = self.sqrt_one_minus_alphas_cumprod[indices[0]]
+            img = init_image * fac_1 + img * fac_2
 
         if progress:
             # Lazy import so that we don't depend on tqdm.
