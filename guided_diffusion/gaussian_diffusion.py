@@ -851,6 +851,7 @@ class GaussianDiffusion:
         init_image=None,
         randomize_class=False,
         cond_fn_with_grad=False,
+        init_sample_t=0
     ):
         """
         Use DDIM to sample from the model and yield intermediate samples from
@@ -872,7 +873,7 @@ class GaussianDiffusion:
         indices = list(range(self.num_timesteps - skip_timesteps))[::-1]
 
         if init_image is not None:
-            my_t = th.ones([shape[0]], device=device, dtype=th.long) * indices[0]
+            my_t = th.ones([shape[0]], device=device, dtype=th.long) * indices[init_sample_t]
             img = self.q_sample(init_image, my_t, img)
 
         if progress:
