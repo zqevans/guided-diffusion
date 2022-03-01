@@ -539,6 +539,7 @@ class GaussianDiffusion:
         skip_timesteps=0,
         init_image=None,
         randomize_class=False,
+        postprocess_fn=None,
         cond_fn_with_grad=False,
     ):
         """
@@ -575,6 +576,7 @@ class GaussianDiffusion:
             init_image=init_image,
             randomize_class=randomize_class,
             cond_fn_with_grad=cond_fn_with_grad,
+            postprocess_fn=postprocess_fn
         ):
             final = sample
         return final["sample"]
@@ -594,6 +596,7 @@ class GaussianDiffusion:
         init_image=None,
         randomize_class=False,
         cond_fn_with_grad=False,
+        postprocess_fn=None
     ):
         """
         Generate samples from the model and yield intermediate samples from
@@ -643,6 +646,8 @@ class GaussianDiffusion:
                     cond_fn=cond_fn,
                     model_kwargs=model_kwargs,
                 )
+                if postprocess_fn is not None:
+                    out = postprocess_fn(out, t)
                 yield out
                 img = out["sample"]
 
@@ -808,6 +813,7 @@ class GaussianDiffusion:
         skip_timesteps=0,
         init_image=None,
         randomize_class=False,
+        postprocess_fn=None,
         cond_fn_with_grad=False,
     ):
         """
@@ -831,6 +837,7 @@ class GaussianDiffusion:
             init_image=init_image,
             randomize_class=randomize_class,
             cond_fn_with_grad=cond_fn_with_grad,
+            postprocess_fn=postprocess_fn
         ):
             final = sample
         return final["sample"]
@@ -851,7 +858,8 @@ class GaussianDiffusion:
         init_image=None,
         randomize_class=False,
         cond_fn_with_grad=False,
-        init_sample_t=0
+        postprocess_fn=None,
+        skip_noise_timesteps=0
     ):
         """
         Use DDIM to sample from the model and yield intermediate samples from
@@ -871,9 +879,8 @@ class GaussianDiffusion:
             init_image = th.zeros_like(img)
 
         indices = list(range(self.num_timesteps - skip_timesteps))[::-1]
-
         if init_image is not None:
-            my_t = th.ones([shape[0]], device=device, dtype=th.long) * indices[init_sample_t]
+            my_t = th.ones([shape[0]], device=device, dtype=th.long) * indices[skip_noise_timesteps]
             img = self.q_sample(init_image, my_t, img)
 
         if progress:
@@ -900,6 +907,8 @@ class GaussianDiffusion:
                     model_kwargs=model_kwargs,
                     eta=eta,
                 )
+                if postprocess_fn is not None:
+                    out = postprocess_fn(out, t)
                 yield out
                 img = out["sample"]
 
@@ -1000,6 +1009,7 @@ class GaussianDiffusion:
         progress=False,
         skip_timesteps=0,
         init_image=None,
+        postprocess_fn=None,
         randomize_class=False,
         cond_fn_with_grad=False,
         order=2,
@@ -1025,6 +1035,7 @@ class GaussianDiffusion:
             randomize_class=randomize_class,
             cond_fn_with_grad=cond_fn_with_grad,
             order=order,
+            postprocess_fn=postprocess_fn
         ):
             final = sample
         return final["sample"]
@@ -1044,6 +1055,7 @@ class GaussianDiffusion:
         init_image=None,
         randomize_class=False,
         cond_fn_with_grad=False,
+        postprocess_fn=None,
         order=2,
     ):
         """
@@ -1096,6 +1108,8 @@ class GaussianDiffusion:
                     order=order,
                     old_out=old_out,
                 )
+                if postprocess_fn is not None:
+                    out = postprocess_fn(out, t)
                 yield out
                 old_out = out
                 img = out["sample"]
